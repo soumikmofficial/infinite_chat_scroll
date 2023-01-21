@@ -12,30 +12,20 @@ const dummyBackendResponse = {
   next: 3,
 };
 
-const FrontEnd = () => {
+const ScrollBoth = () => {
   const [allMessages, setAllMessages] = useState<any>({});
   const [msgToDisplay, setMsgToDisplay] = useState<any>([]);
-  const [loadedPages, setLoadedPages] = useState([0]);
+  const [currentPage, setCurrentPage] = useState(3);
   const [isLoading, setIsLoading] = useState(false);
   const [searchInput, setSEarchInput] = useState("");
   const [displayingSearch, setDisplayingSearch] = useState(false);
-  const [manualScrollSet, setManualScrollSet] = useState(true);
   const ref = useRef<any>();
   const searchedRef = useRef<any>();
   // todo: function to fetch and refetch messages
 
   const handleSearch = () => {
     setDisplayingSearch(true);
-    setLoadedPages([
-      dummyBackendResponse.next,
-      dummyBackendResponse.match,
-      dummyBackendResponse.prev,
-    ]);
-    setMsgToDisplay([
-      ...allMessages[dummyBackendResponse.next],
-      ...allMessages[dummyBackendResponse.match],
-      ...allMessages[dummyBackendResponse.prev],
-    ]);
+    setMsgToDisplay(allMessages[dummyBackendResponse.match]);
   };
   // todo: fetch next set of messages
   const fetchNext = async (nextPage: number, direction: string) => {
@@ -49,8 +39,7 @@ const FrontEnd = () => {
         : setMsgToDisplay((prev: any) => {
             return [...prev, ...allMessages[nextPage]];
           });
-      //   setCurrentPage(nextPage);
-      setLoadedPages((prev) => [...prev, nextPage]);
+      setCurrentPage(nextPage);
       setIsLoading(false);
     }, 2000);
   };
@@ -71,17 +60,17 @@ const FrontEnd = () => {
     }
     setAllMessages(paginated);
     setMsgToDisplay((prev: any) => {
-      return [...paginated[Math.min(...loadedPages)]];
+      return [...paginated[currentPage]];
     });
     setIsLoading(false);
   };
 
-  //   todo: scroll to the searched message
+  //   todo: when we have a searched ref
   useEffect(() => {
     searchedRef.current &&
       displayingSearch &&
       searchedRef.current.scrollIntoView({
-        // behavior: "smooth",
+        behavior: "smooth",
         block: "center",
         inline: "center",
       });
@@ -90,12 +79,10 @@ const FrontEnd = () => {
   useEffect(() => {
     if (!displayingSearch) {
       const { scrollTop, scrollHeight, pageYOffset } = ref.current;
-      //   const { height } = ref.current?.getBoundingClientRect();
-
-      manualScrollSet &&
-        ref.current?.scrollTo({
-          top: ref.current?.scrollHeight - prevScrollHeight + prevScrollTop,
-        });
+      const { height } = ref.current?.getBoundingClientRect();
+      ref.current?.scrollTo({
+        top: ref.current?.scrollHeight - prevScrollHeight + prevScrollTop,
+      });
     }
   }, [msgToDisplay]);
 
@@ -104,29 +91,24 @@ const FrontEnd = () => {
   }, []);
 
   // todo: on scroll
-  useLayoutEffect(() => {
+  useEffect(() => {
     const myFunc = () => {
       const { scrollTop, scrollHeight } = ref.current;
       const { height } = ref.current?.getBoundingClientRect();
       displayingSearch && setDisplayingSearch(false);
+
       //? on scroll down
-      console.log(Math.min(...loadedPages));
-      if (
-        scrollHeight - (scrollTop + height) <= 50 &&
-        Math.min(...loadedPages) > 0
-      ) {
-        console.log("this is running", scrollHeight - (scrollTop + height));
-        setManualScrollSet(false);
-        !isLoading && fetchNext(Math.min(...loadedPages) - 1, "down");
+      if (scrollHeight - (scrollTop + height) <= 300 && currentPage > 0) {
+        !isLoading && fetchNext(currentPage - 1, "down");
       }
       // ?on scroll up
       if (
         scrollTop < lastScrollTop &&
-        scrollTop <= 50 &&
-        Math.max(...loadedPages) < Object.keys(allMessages).length - 1
+        scrollTop <= 300 &&
+        currentPage < Object.keys(allMessages).length - 1
       ) {
         prevScrollTop = scrollTop;
-        !isLoading && fetchNext(Math.max(...loadedPages) + 1, "up");
+        !isLoading && fetchNext(currentPage + 1, "up");
       }
       lastScrollTop = scrollTop;
     };
@@ -134,14 +116,6 @@ const FrontEnd = () => {
     ref.current?.addEventListener("scroll", myFunc);
     return () => ref.current?.removeEventListener("scroll", myFunc);
   });
-
-  // initially scrolls to the bottom
-  //   useLayoutEffect(() => {
-  //     ref?.current?.scrollHeight &&
-  //       ref?.current?.scrollTo({
-  //         top: ref.current.scrollHeight,
-  //       });
-  //   }, [ref.current]);
 
   return (
     <div className={styles.parent}>
@@ -174,4 +148,4 @@ const FrontEnd = () => {
   );
 };
 
-export default FrontEnd;
+export default ScrollBoth;

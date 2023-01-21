@@ -2,14 +2,13 @@ import axios from "axios";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import styles from "./Chat.module.css";
 
-let lastScrollTop = 0;
-let prevScrollTop = 0;
-let prevScrollHeight = 0;
+// let prevScrollTop = 0;
+// let prevScrollHeight = 0;
 
 const BottomScroll = () => {
   const [allMessages, setAllMessages] = useState<any>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
   const ref = useRef<any>();
 
   // todo: function to fetch and refetch messages
@@ -21,25 +20,19 @@ const BottomScroll = () => {
     console.log(data);
   };
   const fetchNext = async () => {
-    setIsLoading(true);
-    prevScrollHeight = ref.current?.scrollHeight;
+    setIsFetching(true);
+
     const { data } = await axios.get(
       `https://jsonplaceholder.typicode.com/posts?_limit=20&_page=${
         currentPage + 1
       }`
     );
     setAllMessages((prev: any) => {
-      return [...data, ...prev];
+      return [...prev, ...data];
     });
     setCurrentPage((prev) => prev + 1);
-    setIsLoading(false);
+    setIsFetching(false);
   };
-
-  useEffect(() => {
-    ref.current?.scrollTo({
-      top: ref.current?.scrollHeight - prevScrollHeight + prevScrollTop,
-    });
-  }, [allMessages]);
 
   useEffect(() => {
     console.log("this ran");
@@ -49,34 +42,24 @@ const BottomScroll = () => {
   // todo: on scroll
   useEffect(() => {
     const myFunc = () => {
-      const { scrollTop, innerHeight } = ref.current;
-      console.log(innerHeight, "inner height");
+      const { scrollTop, scrollHeight } = ref.current;
+      const { height } = ref.current?.getBoundingClientRect();
 
-      if (scrollTop < lastScrollTop && scrollTop <= 200) {
-        prevScrollTop = scrollTop;
-        !isLoading && fetchNext();
+      if (scrollHeight - (scrollTop + height) <= 300) {
+        !isFetching && fetchNext();
       }
-      lastScrollTop = scrollTop;
     };
 
     ref.current?.addEventListener("scroll", myFunc);
     return () => ref.current?.removeEventListener("scroll", myFunc);
   });
 
-  // initially scrolls to the bottom
-  //   useLayoutEffect(() => {
-  //     ref?.current?.scrollHeight &&
-  //       ref?.current?.scrollTo({
-  //         top: ref.current.scrollHeight,
-  //       });
-  //   }, [ref.current]);
-
   return (
     <div className={styles.parent}>
-      <h1>Chat Header</h1>
+      <h1>Infinite Bottom</h1>
 
       <div className={styles.container} ref={ref}>
-        {isLoading && <a>loading</a>}
+        {isFetching && <a>loading</a>}
         {allMessages.map((message: any) => {
           return (
             <>

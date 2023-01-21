@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./App.css";
 import reactLogo from "./assets/react.svg";
 import BottomScroll from "./components/Chat/BottomScroll";
-import Chat from "./components/Chat/Chat";
+import { default as Chat, default as FrontEnd } from "./components/Chat/Chat";
 import Chat2 from "./components/Chat/Chat2";
 import Chat3 from "./components/Chat/Chat3";
 
@@ -11,10 +11,9 @@ function App() {
 
   return (
     <div className="App">
-      {/* <Chat2 /> */}
-      {/* <Chat /> */}
+      <FrontEnd />
       {/* <Chat3 /> */}
-      <BottomScroll />
+      {/* <BottomScroll /> */}
     </div>
   );
 }

@@ -35,6 +35,8 @@ const Chat3 = () => {
   };
 
   useEffect(() => {
+    const { scrollTop, scrollHeight, pageYOffset } = ref.current;
+    const { height } = ref.current?.getBoundingClientRect();
     ref.current?.scrollTo({
       top: ref.current?.scrollHeight - prevScrollHeight + prevScrollTop,
     });
@@ -49,7 +51,7 @@ const Chat3 = () => {
     const myFunc = () => {
       const { scrollTop } = ref.current;
 
-      if (scrollTop < lastScrollTop && scrollTop <= 200) {
+      if (scrollTop < lastScrollTop && scrollTop <= 300) {
         prevScrollTop = scrollTop;
         !isLoading && fetchNext();
       }
@@ -70,7 +72,7 @@ const Chat3 = () => {
 
   return (
     <div className={styles.parent}>
-      <h1>Chat Header</h1>
+      <h1>Infinite Top</h1>
 
       <div className={styles.container} ref={ref}>
         {isLoading && <a>loading</a>}

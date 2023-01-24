@@ -20,6 +20,7 @@
 
 .freeze {
   overflow: hidden;
+  height: 100%;
 }
 
 .parent {
@@ -41,5 +42,23 @@ a {
 }
 
 .searchContainer {
-  margin: 1rem 2rem;
+  /* margin: 1rem 2rem; */
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.loading {
+  text-align: center;
+  color: white;
+}
+
+input {
+  padding: 0.5rem 2rem;
+  font-size: 2rem;
+  width: 100%;
+}
+
+button {
+  padding: 0 3rem;
 }

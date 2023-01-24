@@ -22,10 +22,33 @@ const FrontEnd = () => {
   const [manualScrollSet, setManualScrollSet] = useState(true);
   const ref = useRef<any>();
   const searchedRef = useRef<any>();
-  // todo: function to fetch and refetch messages
 
+  // todo: fetch initial messages
+  const fetchMessages = async () => {
+    setIsLoading(true);
+    const { data } = await axios.get(
+      "https://jsonplaceholder.typicode.com/posts"
+    );
+
+    let paginated: any = {};
+    let startIndex = 0;
+    let endIndex = 20;
+    for (let i = 0; i < 5; i++) {
+      paginated[i] = data.slice(startIndex, endIndex);
+      startIndex += 20;
+      endIndex += 20;
+    }
+    setAllMessages(paginated);
+    setMsgToDisplay((prev: any) => {
+      return [...paginated[Math.min(...loadedPages)]];
+    });
+    setIsLoading(false);
+  };
+
+  // todo: handle search
   const handleSearch = () => {
-    setDisplayingSearch(true);
+    // setDisplayingSearch(true);
+    setManualScrollSet(false);
     setLoadedPages([
       dummyBackendResponse.next,
       dummyBackendResponse.match,
@@ -49,52 +72,29 @@ const FrontEnd = () => {
         : setMsgToDisplay((prev: any) => {
             return [...prev, ...allMessages[nextPage]];
           });
-      //   setCurrentPage(nextPage);
       setLoadedPages((prev) => [...prev, nextPage]);
       setIsLoading(false);
     }, 2000);
-  };
-  // todo: fetch initial messages
-  const fetchMessages = async () => {
-    setIsLoading(true);
-    const { data } = await axios.get(
-      "https://jsonplaceholder.typicode.com/posts"
-    );
-
-    let paginated: any = {};
-    let startIndex = 0;
-    let endIndex = 20;
-    for (let i = 0; i < 5; i++) {
-      paginated[i] = data.slice(startIndex, endIndex);
-      startIndex += 20;
-      endIndex += 20;
-    }
-    setAllMessages(paginated);
-    setMsgToDisplay((prev: any) => {
-      return [...paginated[Math.min(...loadedPages)]];
-    });
-    setIsLoading(false);
   };
 
   //   todo: scroll to the searched message
   useEffect(() => {
     searchedRef.current &&
-      displayingSearch &&
+      !manualScrollSet &&
       searchedRef.current.scrollIntoView({
         // behavior: "smooth",
-        block: "center",
+        block: "start",
         inline: "center",
       });
   }, [searchedRef.current]);
 
+  // todo: set scroll manually
   useEffect(() => {
-    if (!displayingSearch) {
-      const { scrollTop, scrollHeight, pageYOffset } = ref.current;
-      //   const { height } = ref.current?.getBoundingClientRect();
-
+    if (manualScrollSet) {
       manualScrollSet &&
         ref.current?.scrollTo({
-          top: ref.current?.scrollHeight - prevScrollHeight + prevScrollTop,
+          top:
+            ref.current?.scrollHeight - prevScrollHeight + prevScrollTop - 34,
         });
     }
   }, [msgToDisplay]);
@@ -104,18 +104,16 @@ const FrontEnd = () => {
   }, []);
 
   // todo: on scroll
-  useLayoutEffect(() => {
-    const myFunc = () => {
+  useEffect(() => {
+    const handleScroll = (e: any) => {
       const { scrollTop, scrollHeight } = ref.current;
       const { height } = ref.current?.getBoundingClientRect();
-      displayingSearch && setDisplayingSearch(false);
+      !manualScrollSet && setManualScrollSet(true);
       //? on scroll down
-      console.log(Math.min(...loadedPages));
       if (
         scrollHeight - (scrollTop + height) <= 50 &&
         Math.min(...loadedPages) > 0
       ) {
-        console.log("this is running", scrollHeight - (scrollTop + height));
         setManualScrollSet(false);
         !isLoading && fetchNext(Math.min(...loadedPages) - 1, "down");
       }
@@ -131,21 +129,13 @@ const FrontEnd = () => {
       lastScrollTop = scrollTop;
     };
 
-    ref.current?.addEventListener("scroll", myFunc);
-    return () => ref.current?.removeEventListener("scroll", myFunc);
+    ref.current?.addEventListener("scroll", handleScroll);
+    return () => ref.current?.removeEventListener("scroll", handleScroll);
   });
-
-  // initially scrolls to the bottom
-  //   useLayoutEffect(() => {
-  //     ref?.current?.scrollHeight &&
-  //       ref?.current?.scrollTo({
-  //         top: ref.current.scrollHeight,
-  //       });
-  //   }, [ref.current]);
 
   return (
     <div className={styles.parent}>
-      <h1>All Data fetched at once</h1>
+      <h1>Infinite Scroll</h1>
       <section className={styles.searchContainer}>
         <input
           value={searchInput}
@@ -155,8 +145,9 @@ const FrontEnd = () => {
         <button onClick={handleSearch}>Get</button>
       </section>
 
-      <div className={styles.container} ref={ref}>
-        {isLoading && <a>loading</a>}
+      <div className={`${styles.container}`} ref={ref}>
+        {isLoading && <div className={styles.loading}>loading</div>}
+
         {msgToDisplay?.map((message: any) => {
           return (
             <>
@@ -165,10 +156,10 @@ const FrontEnd = () => {
                 ref={message.id == searchInput ? searchedRef : undefined}
                 className={styles.singleMessage}
               >{`${message.id} - ${message.title} `}</h3>
-              ;
             </>
           );
         })}
+        {isLoading && <div className={styles.loading}>loading</div>}
       </div>
     </div>
   );

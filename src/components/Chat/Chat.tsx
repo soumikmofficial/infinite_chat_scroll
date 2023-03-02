@@ -18,7 +18,7 @@ const FrontEnd = () => {
   const [loadedPages, setLoadedPages] = useState([0]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchInput, setSEarchInput] = useState("");
-  const [displayingSearch, setDisplayingSearch] = useState(false);
+  // const [displayingSearch, setDisplayingSearch] = useState(false);
   const [manualScrollSet, setManualScrollSet] = useState(true);
   const ref = useRef<any>();
   const searchedRef = useRef<any>();
